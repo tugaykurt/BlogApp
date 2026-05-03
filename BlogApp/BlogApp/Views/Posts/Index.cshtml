@@ -1,0 +1,44 @@
+﻿@model PostsViewModel
+@{
+    ViewData["Title"] = "Index";
+}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="bg-white p-4">
+            <h1 class="h4 mb-4">Popular Posts</h1>
+            @foreach (var post in Model.Posts)
+            {
+                <div class="card bg-transparent border-0 mb-3">
+                    <div class="row">
+                        <div class="col-4">
+                            <img src="/img/@post.Image" class="img-fluid rounded" />
+                        </div>
+                        <div class="col-8">
+                            <h5><a href="/post/@post.Url" class="link-opacity-10-hover fw-bold">@post.Title</a></h5>
+                            <p>@post.Description</p>
+                            <div>
+                                @foreach (var tag in post.Tags)
+                                {          
+                                    <a href="/posts/tag/@tag.Url" class="badge bg-@tag.Color bg-opacity-10 text-danger mb-2 fw-bold">@tag.Text</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-3" />
+            }
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item"><a class="page-link">1</a></li>
+                    <li class="page-item"><a class="page-link">2</a></li>
+                    <li class="page-item"><a class="page-link">3</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <vc:tags-menu></vc:tags-menu> <!--vc:View Components'in kısaltılmışı, tags-menu'de partial view'in bağlı olduğu class'ın ve bulunduğu klasörün ismi. Sayfanın 2 ismi varsa araya - koyarak yazılmalı. Eğer bu taghelper başta çalışmazsa _ViewImport.cshtml sayfasına gidip, et işareti ile addTagHelper *, BlogApp yazmamız gerekli. Bununla programa BlogApp projesinin tüm dosyalarında taghelper kullanımı açmış oluyoruz.-->
+        <vc:new-posts></vc:new-posts>
+    </div>
+</div>
+

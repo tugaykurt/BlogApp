@@ -1,0 +1,158 @@
+﻿@model Post
+@{
+    ViewData["Title"] = "Details";
+}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="bg-white p-4">
+            <h1 class="h4 mb-4">@Model.Title</h1>
+            <div>
+                @foreach (var tag in Model.Tags)
+                {
+                    <a href="/posts/tag/@tag.Url" class="badge bg-@tag.Color bg-opacity-10 text-danger mb-2 fw-bold">@tag.Text</a>
+                }
+
+            </div>
+            <img src="/img/@Model.Image" class="img-fluid rounded mb-3" />
+            <ul class="list-inline my-3">
+                <li class="list-inline-item"><i class="bi bi-calendar"></i> @Model.PublishedOn.ToString("g")</li>
+                <li class="list-inline-item"><i class="bi bi-person-circle"></i> <a href="/profile/@Model.User.UserName">@Model.User.UserName</a></li>
+            </ul>
+            <hr class="py-3" />
+            <div>@Html.Raw(@Model.Content)</div>
+        </div>
+        <div class="bg-white mt-3">
+            <div class="card border-0">
+                <div class="card-header pb-0">
+                    <h4><span id="commentCount">@Model.Comments.Count</span> Reviews.</h4>
+                </div>
+                <div class="card-body">
+                    <div id="Comments">
+                        @foreach (var comment in Model.Comments)
+                        {
+                            <div class="my-4 d-flex" id="comment-@comment.CommentId">
+                                <img src="/img/@comment.User.Image" class="avatar rounded-circle float-start me-3" />
+                                <div>
+                                    <div class="mb-2, d-flex">
+                                        <h6 class="me-2"><a href="/profile/@comment.User.UserName">@comment.User.UserName</a></h6>
+                                        <small>@comment.PublishedOn.ToString("g")</small>
+                                    </div>
+                                    <p>@comment.Text</p>
+                                </div>
+                                @if (User.Identity!.IsAuthenticated && comment.User.UserName == User.FindFirstValue(ClaimTypes.GivenName))
+                                {
+                                    <div class="ms-auto">
+                                        <button type="button" class="btn btn-sm btn-danger btn-comment-delete" data-id="@comment.CommentId">Delete</button>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        <p id="errorMessage"></p>
+                    </div>
+                    <hr class="my-4" />
+                    <div>
+                        <h4 class="mb-3">Add Comment</h4>
+                        <form asp-controller="Posts" asp-action="AddComment" method="post">
+                            <input type="hidden" id="PostId" name="PostId" value="@Model.PostId" />
+                            <div class="mb-3">
+                                <label for="Text" class="form-label">Comment</label>
+                                <textarea type="text" name="Text" id="Text" rows="3" class="form-control"></textarea>
+                            </div>
+                            @if (User.Identity!.IsAuthenticated)
+                            {
+                                <div class="mb-3">
+                                    <button type="submit" id="btnCommentSave" class="btn btn-primary">Post</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <a asp-controller="Users" asp-action="Login" class="btn btn-success">Sign in to post</a>
+                                </div>
+                            }
+
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <vc:tags-menu></vc:tags-menu>
+        <vc:new-posts></vc:new-posts>
+    </div>
+</div>
+
+<!-- ******************************** Ajax Requests *********************************-->
+<!-- Kullanıcı yorum yaparken, paylaş butonuna bastıktan sonra bulunduğu post'un sayfası yenilenir ve yapılan yorum yenilendikten sonra gözükür. Ancak biz bunu istemiyoruz. Kullanıcı yorum yaptıktan sonra sayfa yenilenmeden, yani yeniden bir request gerçekleşmeden bu işlem yapılsın istiyoruz. Bunun içinde ajax request'lerini kullanıyoruz.-->
+<!-- Şimdi burada jquery kullanarak bir ajax request'i oluşturduk. Bu request formun butoduna basıldıktan sonra çalışır ve AddComment ismindeki action metodundan gelen json verileri yakalar ve consola log olarak yazar.PostsController'daki AddComment action'ına git...-->
+<!--Daha sonra eklene verileri javascript yardımıyla sayfada görüntülememiz gerekli.-->
+<!--Javascript yardımıyla alınan comment verilerini ekleme işlemi mantığı şu: görünen 5 tane değer var ve biz sayfayı yenilemden aldığımız değerleri 6. olarak append metodu ile ekliyoruz. Tabi görünen yorum sayısınıda değiştirmeyi unutmuyoruz. -->
+<!--Bir ActionResult metodundan json türündeki verileri return edebiliyor ve bunu ajax'ta yakalayabiliyoruz. Ajax'ta, formun içerisinden input ile bir veri gitmiyor ama bizi m örneğin bir id göndermek istiyorsak, button üzerinde data-veriIsmi tag'i ile gönderebiliyoruz. CommentDelete ajax'ına bak... -->
+<!--Url.Action metodu ile formu action'a yönlendirmiş oluyoruz. Eğer içi içe form yapısı kullanacaksak ve içteki forma'a ajax request'i uygulayacaksak içteki form'a tekrar form tag'i açmaya gerekyok ki zaten html izin vermez. Dolayısı ile buradan yönlendirilmiş oluyor. Posts/edit view'ine git... -->
+@section Scripts {
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $("#btnCommentSave").click(function()
+            {
+                $.ajax({
+                   type: 'POST',
+                   url: '@Url.Action("AddComment")',
+                   dataType: 'json',
+                   data: {
+                       postId: $("#PostId").val(),
+                       text: $("#Text").val()
+                       //userName: $("#UserName").val(),
+                },
+                success: function(comment){
+                    //console.log(comment);
+                    var date = new Date(comment.publishedOn);
+                     $("#Comments").append(`
+                     <div class="my-4 d-flex">
+                                <img src="/img/${comment.image}" class="avatar rounded-circle float-start me-3" />
+                                <div>
+                                    <div class="mb-2, d-flex">
+                                        <h6 class="me-2">${comment.userName}</h6>
+                                        <small>${date.toLocaleDateString()}</small>
+                                    </div>
+                                    <p>${comment.text}</p>
+                                </div>
+                            </div>
+                    `);
+                   $("#Text").val('')
+                   //$("#UserName").val(''),
+
+                   var count = parseInt($("#commentCount").text());
+                   $("#commentCount").text(count + 1);
+                }
+                });
+                return false;
+            });
+            $(".btn-comment-delete").click(function(){
+                let commentId = $(this).data("id");
+                let commentElement = $("#comment-" + commentId);
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("DeleteComment")',
+                    data: { commentId: commentId },
+                    success: function(response){
+                        if(response.success)
+                        {
+                            commentElement.fadeOut(500, function(){
+                                $(this).remove();
+                            });
+                             var count = parseInt($("#commentCount").text());
+                               $("#commentCount").text(count - 1);
+                        }
+                        else
+                        {
+                            $("#errorMessage").text(response.message);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

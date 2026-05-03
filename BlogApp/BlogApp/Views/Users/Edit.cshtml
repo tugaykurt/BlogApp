@@ -1,0 +1,46 @@
+﻿@model EditUserProfileViewModel
+@{
+    ViewData["Title"] = "Edit";
+}
+<div class="row">
+    <div class="col-12">
+        <div class="bg-white p-4">
+            <table class="table">
+                <tr class="border-bottom">
+                    <td><h1 class="mb-3 text-secondary">User Edit</h1></td>
+                    <td style="width:200px"><a href="/Users/EditPassword/@Model.UserId" class="btn btn-danger">Edit to Password</a></td>
+                </tr>
+            </table>
+            <form asp-action="Edit" method="post" enctype="multipart/form-data" novalidate>
+                <input type="hidden" asp-for="UserId"/>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label">UserName</label>
+                    <input asp-for="UserName" class="form-control" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label">Full Name</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Image" class="form-label">Image</label>
+                    <input type="file" asp-for="Image" class="form-control" />
+                    <span asp-validation-for="Image" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <img src="/img/@Model.Image" style="width:100px" />
+                    <input type="hidden" asp-for="Image" name="oldImage" />
+                </div>
+                <button type="submit" class="btn btn-primary d-inline-flex">Edit and Login</button>
+                <a href="/profile/@Model.UserName" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>

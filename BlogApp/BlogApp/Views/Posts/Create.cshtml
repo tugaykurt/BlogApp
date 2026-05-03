@@ -1,0 +1,125 @@
+﻿@model PostCreateViewModel
+@{
+    ViewData["Title"] = "Create";
+}
+<form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+    <div class="row">
+        <div class="col-9">
+            <div class="bg-white p-4">
+                <h1 class="mb-3 text-secondary">Post Create</h1>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <input asp-for="Description" class="form-control" />
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Url" class="form-label">Url</label>
+                    <input asp-for="Url" class="form-control" />
+                    <span asp-validation-for="Url" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Image" class="form-label">Image</label>
+                    <input type="file" asp-for="Image" class="form-control" />
+                    <span asp-validation-for="Image" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label">Content</label>
+                    <textarea asp-for="Content" class="form-control"></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary d-inline-flex">Create</button>
+                <a href="/posts/list" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+        <div class="col-3">
+            <div class="bg-white p-2">
+                <div class="mb-3">
+                    <h5 class="mb-3">Tags</h5>
+                    <hr class="mb-3" />
+                    <div id="Tag">
+                        @foreach (var tag in ViewBag.Tags)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="tagIds"
+                                       value="@tag.TagId"
+                                       id="tag_@tag.Text"
+                                       @(ViewBag.SelectedTags != null && Array.IndexOf((int[])ViewBag.SelectedTags, tag.TagId) != -1 ? "checked" : "")>
+                                <label class="form-check-label" for="tag_@tag.Text">
+                                    @tag.Text
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div>
+                    <hr class="mb-3" />
+                    <h5 class="mb-3">Add Tag</h5>
+                    <hr class="mb-3" />
+                    <p id="TagError"></p>
+                    <input asp-for="TagText" class="form-control mb-3" />
+                    <span asp-validation-for="TagText" class="text-danger"></span>
+                    <button type="button" id="AddTag" class="btn btn-secondary">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<!--Burada sayfaya tinymce html text editörünü ekledik..-->
+@section Scripts {
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.tiny.cloud/1/utlsqp8tfrs3cxp69g2cupisungjwqklqnfyskphn27kqw7t/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            tinymce.init({
+                selector: "#Content"
+            });
+            $("form").on("submit", function(){
+            tinymce.triggerSave();
+            });
+            $("#AddTag").click(function(){
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("AddTag")',
+                    datatype: 'json',
+                    data: {
+                        tagText: $("#TagText").val()
+                    },
+                    success: function(response){
+                        if(response.success)
+                        {
+                            $("#Tag").append(`
+                         <div class="form-check">
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="tagIds"
+                                       value="${response.tagId}"
+                                       id="tag_${response.tagText}"
+                                       >
+                                <label class="form-check-label" for="tag_${response.tagText}">
+                                    ${response.tagText}
+                                </label>
+                            </div>
+                        `);
+                        }
+                        else
+                        {
+                            $("#TagError").text(response.message);
+                        }
+
+                        $("#TagText").val('');
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+
+}
